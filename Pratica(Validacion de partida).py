@@ -5,6 +5,10 @@ cxd5 24. Rbc1 Qb6 25. h3 a4 26. bxa4 Rb2 27. Qa3 Rxd2 28. Qe7 Qd8 29. Qxe6+ Kh8 
 Qxf5 Nf6 31. g4 Ne4 32. Rf1 h6 33. Rc6 Qh4 34. Rc8+ Rxc8 35. Qxc8+ Kh7 """
 
 import re
+from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsScene, QGraphicsView
+from PyQt5.QtCore import Qt, QPointF
+from PyQt5.QtGui import QPen, QBrush, QColor
+import sys
 
 class ChessNotationValidator:
     def __init__(self):
@@ -162,6 +166,74 @@ def validate_game_text(game_text, validator):
     return results
 
 
+class ChessTreeNode:
+    def __init__(self, move, is_white=True):
+        self.move = move
+        self.is_white = is_white
+        self.left = None
+        self.right = None
+
+class ChessTreeVisualizer(QMainWindow):
+    def __init__(self, moves):
+        super().__init__()
+        self.setWindowTitle("Árbol de Jugadas de Ajedrez")
+        self.setGeometry(100, 100, 1200, 800)
+
+        # Crear la escena y la vista
+        self.scene = QGraphicsScene()
+        self.view = QGraphicsView(self.scene)
+        self.setCentralWidget(self.view)
+
+        # Construir el árbol
+        self.root = self.build_tree(moves)
+        
+        # Dibujar el árbol
+        self.draw_tree(self.root, 0, 0, 1200, 100)
+
+    def build_tree(self, moves):
+        if not moves:
+            return None
+
+        # Separar el movimiento en blancas y negras
+        parts = moves[0].split()
+        root = ChessTreeNode(parts[1], True)  # Movimiento blanco
+        
+        if len(parts) > 2:  # Si hay movimiento negro
+            root.right = ChessTreeNode(parts[2], False)
+
+        if len(moves) > 1:
+            root.left = self.build_tree(moves[1:])
+
+        return root
+
+    def draw_tree(self, node, x, y, width, vertical_spacing):
+        if not node:
+            return
+
+        # Configurar colores según el tipo de movimiento
+        color = QColor(255, 255, 255) if node.is_white else QColor(100, 100, 100)
+        
+        # Dibujar el nodo
+        radius = 20
+        self.scene.addEllipse(x - radius, y - radius, radius * 2, radius * 2, 
+                             QPen(Qt.black), QBrush(color))
+        
+        # Añadir el texto del movimiento
+        text = self.scene.addText(node.move)
+        text.setPos(x - radius, y + radius)
+
+        # Dibujar conexiones y nodos hijos
+        if node.left:
+            next_x = x - width/4
+            self.scene.addLine(x, y, next_x, y + vertical_spacing)
+            self.draw_tree(node.left, next_x, y + vertical_spacing, width/2, vertical_spacing)
+
+        if node.right:
+            next_x = x + width/4
+            self.scene.addLine(x, y, next_x, y + vertical_spacing)
+            self.draw_tree(node.right, next_x, y + vertical_spacing, width/2, vertical_spacing)    
+
+
 def main():
     validator = ChessNotationValidator()
     
@@ -200,6 +272,129 @@ def main():
     else:
         print("Opcion invalida")
 
+
+if __name__ == "__main__":
+    main()
+
+# ... existing code ...
+
+
+
+class ChessTreeNode:
+    def __init__(self, move, is_white=True):
+        self.move = move
+        self.is_white = is_white
+        self.left = None
+        self.right = None
+
+class ChessTreeVisualizer(QMainWindow):
+    def __init__(self, moves):
+        super().__init__()
+        self.setWindowTitle("Árbol de Jugadas de Ajedrez")
+        self.setGeometry(100, 100, 1200, 800)
+
+        # Crear la escena y la vista
+        self.scene = QGraphicsScene()
+        self.view = QGraphicsView(self.scene)
+        self.setCentralWidget(self.view)
+
+        # Construir el árbol
+        self.root = self.build_tree(moves)
+        
+        # Dibujar el árbol
+        self.draw_tree(self.root, 0, 0, 1200, 100)
+
+    def build_tree(self, moves):
+        if not moves:
+            return None
+
+        # Separar el movimiento en blancas y negras
+        parts = moves[0].split()
+        root = ChessTreeNode(parts[1], True)  # Movimiento blanco
+        
+        if len(parts) > 2:  # Si hay movimiento negro
+            root.right = ChessTreeNode(parts[2], False)
+
+        if len(moves) > 1:
+            root.left = self.build_tree(moves[1:])
+
+        return root
+
+    def draw_tree(self, node, x, y, width, vertical_spacing):
+        if not node:
+            return
+
+        # Configurar colores según el tipo de movimiento
+        color = QColor(255, 255, 255) if node.is_white else QColor(100, 100, 100)
+        
+        # Dibujar el nodo
+        radius = 20
+        self.scene.addEllipse(x - radius, y - radius, radius * 2, radius * 2, 
+                             QPen(Qt.black), QBrush(color))
+        
+        # Añadir el texto del movimiento
+        text = self.scene.addText(node.move)
+        text.setPos(x - radius, y + radius)
+
+        # Dibujar conexiones y nodos hijos
+        if node.left:
+            next_x = x - width/4
+            self.scene.addLine(x, y, next_x, y + vertical_spacing)
+            self.draw_tree(node.left, next_x, y + vertical_spacing, width/2, vertical_spacing)
+
+        if node.right:
+            next_x = x + width/4
+            self.scene.addLine(x, y, next_x, y + vertical_spacing)
+            self.draw_tree(node.right, next_x, y + vertical_spacing, width/2, vertical_spacing)
+
+def main():
+    validator = ChessNotationValidator()
+    
+    print("Validador de Ajedrez")
+    print("=======================")
+    print("1. Ingresar un juego")
+    print("2. Salir")
+    
+    choice = input("Selecciona una opción (1-2): ")
+    
+    if choice == "1":
+        print("\nIngresa una partida de ajedrez.")
+        print("Ejemplo del formato: 1. e4 e5 2. Nf3 Nc6")
+        print("Presiona enter para validar.")
+        
+        game_lines = []
+        while True:
+            line = input("> ")
+            if line.strip() == "":
+                break
+            game_lines.append(line)
+        
+        user_game = "\n".join(game_lines)
+        if not user_game.strip():
+            print("Por favor ingresa información")
+            return
+            
+        results = validate_game_text(user_game, validator)
+        is_valid = all("Válido" in result for result in results if ":" in result)
+        
+        if is_valid:
+            print("La partida es válida. Mostrando árbol de jugadas...")
+            app = QApplication(sys.argv)
+            moves = parse_example_moves(user_game)
+            tree_visualizer = ChessTreeVisualizer(moves)
+            tree_visualizer.show()
+            sys.exit(app.exec_())
+        else:
+            print("La partida contiene movimientos inválidos.")
+            for result in results:
+                print(result)
+    
+    elif choice == "2":
+        print("Saliendo del programa")
+        return
+    
+    else:
+        print("Opción inválida")
 
 if __name__ == "__main__":
     main()
